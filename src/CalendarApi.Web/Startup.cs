@@ -20,6 +20,8 @@ namespace CalendarApi.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+
             services.ConfigureLogicServices(Configuration);
             services.AddControllers();
 
@@ -31,15 +33,39 @@ namespace CalendarApi.Web
                 //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 //c.IncludeXmlComments(xmlPath);
             });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            int sslPort = 0;
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                var builder = new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
+                                .AddJsonFile(@"Properties/launchSettings.json", optional: false, reloadOnChange: true);
+                var launchConfig = builder.Build();
+                sslPort = launchConfig.GetValue<int>("iisSettings:iisExpress:sslPort");
             }
+
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.IsHttps)
+                {
+                    await next();
+                }
+                else
+                {
+                    string sslPortStr = string.Empty;
+                    if (sslPort != 0 && sslPort != 443)
+                    {
+                        sslPortStr = $":{sslPort}";
+                    }
+                    string httpsUrl = $"https://{context.Request.Host.Host}{sslPortStr}{context.Request.Path}";
+                    context.Response.Redirect(httpsUrl);
+                }
+            });
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>

@@ -46,7 +46,7 @@ namespace CalendarApi.Dal
         public DbSet<EventsEntity> Events { get; set; }
         public DbSet<EventMembersEntity> EventMembers { get; set; }
         public DbSet<LocationsEntity> Locations { get; set; }
-        public DbSet<PeopleEntity> PeopleEntities { get; set; }
+        public DbSet<PeopleEntity> Peoples { get; set; }
 
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using CalendarApi.Definition.Services;
+using CalendarApi.Web.Mappers;
 using CalendarApi.Web.WebModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +13,13 @@ namespace CalendarApi.Web.Controllers
     [ApiController]
     public class CalendarController : ControllerBase
     {
+        private readonly ICalendarService _service;
+
+        public CalendarController(ICalendarService service)
+        {
+            _service = service;
+        }
+
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
@@ -24,7 +33,8 @@ namespace CalendarApi.Web.Controllers
                 return BadRequest(mess);
             }
 
-            throw new NotImplementedException();
+            await _service.AddEvent(model.Map());
+            return Accepted();
         }
 
         [HttpDelete("{id:long}")]
@@ -40,7 +50,12 @@ namespace CalendarApi.Web.Controllers
                 return NotFound("Id not exists");
             }
 
-            throw new NotImplementedException();
+            var result = await _service.DeleteEvent(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+            return Ok();
         }
 
         [HttpPut("{id:long}")]
@@ -60,7 +75,12 @@ namespace CalendarApi.Web.Controllers
                 return BadRequest("Please supply the correct event Id");
             }
 
-            throw new NotImplementedException();
+            var result = await _service.UpdateEvent(id, model.Map());
+            if (result == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(result);
         }
 
         [HttpGet]
@@ -69,7 +89,7 @@ namespace CalendarApi.Web.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAll()
         {
-            throw new NotImplementedException();
+            return Ok(await _service.GetAll(sortedByDescTime: false));
         }
 
         [HttpGet("query")]
@@ -84,7 +104,7 @@ namespace CalendarApi.Web.Controllers
                 return BadRequest(message);
             }
 
-            throw new NotImplementedException();
+            return Ok(await _service.GetQuery(eventOrganizer, id, location, name));
         }
 
         [HttpGet("sort")]
@@ -94,7 +114,7 @@ namespace CalendarApi.Web.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Sort()
         {
-            throw new NotImplementedException(); // desc!
+            return Ok(await _service.GetAll(sortedByDescTime: true));
         }
 
         private bool ValidateAddEventRequest(EventWebModel model, out string message)
@@ -117,7 +137,8 @@ namespace CalendarApi.Web.Controllers
         {
             if (string.IsNullOrWhiteSpace(eventOrganizer) && string.IsNullOrWhiteSpace(location) && string.IsNullOrWhiteSpace(name) && !id.HasValue)
             {
-                message = "Please provide query parameter, epty request is not possible";
+                // think about use resx file for translations
+                message = "Please provide query parameter, empty request is not possible";
                 return false;
             }
             if (id != null && id.Value < 1)
@@ -125,6 +146,11 @@ namespace CalendarApi.Web.Controllers
                 message = "Id has to be bigger than 0";
                 return false;
             }
+            // validate if only one is passed
+            //if (true)
+            //{
+
+            //}
             message = string.Empty;
             return true;
         }

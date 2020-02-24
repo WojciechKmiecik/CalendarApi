@@ -4,17 +4,18 @@ namespace CalendarApi.Logic.Helpers
 {
     public static class DateTimeHelper
     {
-        private static long ToUnixTime(this DateTime dateTime)
+        public static ulong ToUnixTime(this DateTime dateTime)
         {
             var dateTimeOffset = new DateTimeOffset(dateTime);
-            return dateTimeOffset.ToUnixTimeSeconds();
+            return  (ulong)dateTimeOffset.ToUnixTimeSeconds();
         }
 
 
-        // Unix Time --> Local Time
-        private static DateTime FromUnixTime(this long unixDateTime)
+        // Unix Time --> UTC Time
+        public static DateTime FromUnixTime(this ulong unixDateTime)
         {
-            return DateTimeOffset.FromUnixTimeSeconds(unixDateTime).DateTime.ToUniversalTime();
+            // should check overflow here
+            return DateTimeOffset.FromUnixTimeSeconds((long)unixDateTime).DateTime.ToUniversalTime();
         }
     }
 }

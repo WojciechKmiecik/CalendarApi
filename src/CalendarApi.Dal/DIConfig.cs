@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CalendarApi.Dal.DataServices;
+using CalendarApi.Definition.DataServices;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +15,10 @@ namespace CalendarApi.Dal
                 c.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
             });
+            services.AddScoped<ILocationsDataService, LocationsDataService>();
+            services.AddScoped<IEventsDataService, EventsDataService>();
+            services.AddScoped<IPeopleDataService, PeopleDataService>();
+
         }
     }
 }
